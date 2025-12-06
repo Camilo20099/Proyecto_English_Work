@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aprende Inglés Profesional</title>
+<style>
+body { font-family: Arial, sans-serif; margin:0; background: #f2f2f2;}
+header, footer, section { background: rgba(255,255,255,0.95); margin: 15px auto; padding: 20px; border-radius: 12px; max-width: 900px;}
+h1,h2{text-align:center;}
+button { padding:10px 15px; margin:5px; border-radius:5px; border:none; cursor:pointer; transition:0.3s;}
+button:hover{transform:scale(1.05);}
+.correct{color:green;font-weight:bold;}
+.wrong{color:red;font-weight:bold;}
+.progress-bar-container{width:100%; background:#ddd; border-radius:10px; overflow:hidden; margin-bottom:10px;}
+.progress-bar{height:15px; width:0%; background:#4CAF50; border-radius:10px; transition:0.5s;}
+.drag-word{display:inline-block; padding:5px 10px; background:#eee; margin:3px; cursor:grab; border-radius:5px;}
+.drag-target{display:inline-block; min-width:80px; padding:5px; margin:3px; border-bottom:2px solid #000; vertical-align: middle; text-align:center;}
+.match-container { margin-top: 10px; margin-bottom: 10px;}
+.match-pair { margin-bottom: 10px;}
+.carousel{overflow:hidden; border-radius:10px; margin-bottom:20px; position:relative;}
+.carousel-images{display:flex; transition:0.5s;}
+.carousel-images img{width:100%; flex-shrink:0;}
+.level{display:none; margin-top:20px;}
+/* ===== NIVELES: ocultos por defecto y estilos propios por nivel ===== */
+.level {
+  display: none;                /* oculto por defecto */
+  padding: 18px;
+  margin-top: 20px;
+  border-radius: 12px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+/* nivel activo: se muestra */
+.level.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Estilos individuales por nivel (puedes ajustar colores) */
+#basic.level {
+  border-left: 6px solid #2e7d32;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(230,255,240,0.7));
+}
+#intermediate.level {
+  border-left: 6px solid #1565c0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(235,245,255,0.7));
+}
+#advanced.level {
+  border-left: 6px solid #6a1b9a;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(245,235,255,0.7));
+}
+
+/* Barras de progreso con color propio por nivel */
+#basic-progress { background: linear-gradient(90deg,#66bb6a,#00e676); height:18px; border-radius:18px; transition: width .4s ease; }
+#intermediate-progress { background: linear-gradient(90deg,#42a5f5,#1e88e5); height:18px; border-radius:18px; transition: width .4s ease; }
+#advanced-progress { background: linear-gradient(90deg,#ab47bc,#8e24aa); height:18px; border-radius:18px; transition: width .4s ease; }
+
+/* Botón reiniciar estilo */
+.reset-btn {
+  background: transparent;
+  border: 2px dashed rgba(0,0,0,0.08);
+  color: #333;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-left:8px;
+}
+.reset-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+input.input-answer{padding:5px; border-radius:5px; border:1px solid #ccc;}
+</style>
+</head>
+<body>`
+
+<div id="block-screen" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  color:white;
+  z-index:9999;
+  text-align:center;
+  padding-top:150px;
+  font-size:24px;
+">
+  <h2>⚠ Página Bloqueada</h2>
+  <p>Has excedido el número permitido de reinicios del nivel.</p>
+  <p>Contacta al administrador para desbloquear el acceso.</p>
+</div>
+
+<button id="admin-unlock-btn" onclick="desbloquearPagina()" 
+style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 15px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #ff9800;
+  color: white;
+  display: none; /* IMPORTANTE: oculto por defecto */
+  z-index: 99999;
+">
+Desbloquear (Admin)
+</button>
+
+
+<header>
+<h1>Aprende Inglés Interactivo y Profesional</h1>
+<div class="carousel">
+  <div class="carousel-images">
+    <img src="https://imagenes2.eltiempo.com/files/image_1200_535/uploads/2017/02/11/589f759e6d89f.jpeg" alt="Imagen1">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcST1fDkgapaOzoG2ux0uoE1yyT-a2DiGJAfvUZJSbXiVrRKfNdBopd8-9Dv3iARQCAvBro&usqp=CAU" alt="Imagen2">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGnGdysurnmlgXGLpR9PSreJvd98MSlVf--w&s" alt="Imagen3">
+    <img src="https://marketplace.canva.com/B89yQ/MAGQ4KB89yQ/1/tl/canva-blackboard-with-text-learn-english-and-stationery-on-table-MAGQ4KB89yQ.jpg" alt="Imagen4">
+  </div>
+</div>
+</header>
+
+<!-- AUTENTICACIÓN -->
+<section id="auth-screen">
+  <h2>Registro / Inicio de Sesión</h2>
+  <div id="register-div">
+    <h3>Registrarse</h3>
+    <input type="text" id="reg-username" placeholder="Usuario"><br><br>
+    <input type="password" id="reg-password" placeholder="Contraseña"><br><br>
+    <button id="register-btn">Registrarse</button>
+    <p id="reg-msg" style="color:red;"></p>
+  </div>
+  <hr>
+  <div id="login-div">
+    <h3>Iniciar Sesión</h3>
+    <input type="text" id="login-username" placeholder="Usuario"><br><br>
+    <input type="password" id="login-password" placeholder="Contraseña"><br><br>
+    <button id="login-btn">Iniciar Sesión</button>
+    <p id="login-msg" style="color:red;"></p>
+  </div>
+</section>
+
+<section id="start-screen">
+  <h2>¡Bienvenido!</h2>
+  <p>Comienza tu aprendizaje desde el Nivel Básico.</p>
+  <button id="start-btn">Iniciar</button>
+</section>
+
+<section id="basic" class="level">
+<h2>Nivel Básico</h2>
+<div class="progress-bar-container"><div class="progress-bar" id="basic-progress"></div></div>
+<div id="basic-exercises"></div>
+<button id="basic-complete" disabled>Pasar al Nivel Intermedio</button>
+<button class="reset-btn" onclick="resetLevel('basic'); registrarReinicio('basic');">Reiniciar Nivel</button>
+</section>
+
+<section id="intermediate" class="level">
+<h2>Nivel Intermedio</h2>
+<div class="progress-bar-container"><div class="progress-bar" id="intermediate-progress"></div></div>
+<div id="intermediate-exercises"></div>
+<button id="intermediate-complete" disabled>Pasar al Nivel Avanzado</button>
+<button class="reset-btn" onclick="resetLevel('intermediate'); registrarReinicio('intermediate');">Reiniciar Nivel</button>
+</section>
+
+<section id="advanced" class="level">
+<h2>Nivel Avanzado</h2>
+<div class="progress-bar-container"><div class="progress-bar" id="advanced-progress"></div></div>
+<div id="advanced-exercises"></div>
+<button id="advanced-complete" disabled>¡Felicidades, completaste todos los niveles!</button>
+<button class="reset-btn" onclick="resetLevel('advanced'); registrarReinicio('advanced');">Reiniciar Nivel</button>
+</section>
+
+<footer>
+<p>© 2025 Aprende Inglés Profesional</p>
+</footer>
+
+<script>
+  
+const LIMITE_REINICIOS = 3; // Ajusta el límite
+
+// Mostrar pantalla de bloqueo sin borrar el contenido
+function bloquearPagina() {
+    // Oculta todo lo que haya en el body menos la pantalla de bloqueo
+    [...document.body.children].forEach(el => {
+        if (el.id !== "block-screen") el.style.display = "none";
+    });
+
+    // Muestra la pantalla de bloqueo
+    const bloque = document.getElementById("block-screen");
+    bloque.style.display = "block";
+}
+
+// Registrar reinicio
+function registrarReinicio() {
+    let reinicios = parseInt(localStorage.getItem("contadorReinicios")) || 0;
+    reinicios++;
+    localStorage.setItem("contadorReinicios", reinicios);
+
+    if (reinicios >= LIMITE_REINICIOS) {
+        bloquearPagina();
+    }
+}
+
+// Comprobar bloqueo al cargar
+window.addEventListener("DOMContentLoaded", () => {
+    let reinicios = parseInt(localStorage.getItem("contadorReinicios")) || 0;
+    if (reinicios >= LIMITE_REINICIOS) {
+        bloquearPagina();
+    }
+});
+
+
+// Función para desbloquear manualmente
+function desbloquearPagina() {
+    localStorage.setItem("contadorReinicios", 0);
+
+    // Mostrar todo el contenido oculto
+    [...document.body.children].forEach(el => {
+        if (el.id !== "block-screen" && el.id !== "admin-unlock-btn") {
+            el.style.display = "";
+        }
+    });
+
+    // Ocultar pantalla de bloqueo
+    document.getElementById("block-screen").style.display = "none";
+
+    alert("✔ Página desbloqueada correctamente.");
+}
+
+// OPCIONAL: Mostrar el botón si presionas una combinación secreta
+// Ejemplo: CTRL + ALT + U
+document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.altKey && e.key === "u") {
+        document.getElementById("admin-unlock-btn").style.display = "block";
+        alert("🔓 Botón de administrador activado.");
+    }
+});
+
+
+// CARRUSEL
+let carouselIndex = 0;
+const carouselImages = document.querySelector('.carousel-images');
+const totalImages = carouselImages.children.length;
+setInterval(()=>{
+  carouselIndex++;
+  if(carouselIndex>=totalImages) carouselIndex=0;
+  carouselImages.style.transform = `translateX(${-carouselIndex*100}%)`;
+},3000);
+
+// AUTENTICACIÓN
+const authScreen = document.getElementById('auth-screen');
+const startScreen = document.getElementById('start-screen');
+authScreen.style.display='block';
+startScreen.style.display='none';
+
+// Registro
+document.getElementById('register-btn').addEventListener('click', ()=>{
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value.trim();
+  const regMsg = document.getElementById('reg-msg');
+
+  if(!username || !password){
+    regMsg.textContent = 'Completa todos los campos';
+    return;
+  }
+
+  if(localStorage.getItem('user_' + username)){
+    regMsg.textContent = 'El usuario ya existe';
+    return;
+  }
+
+  localStorage.setItem('user_' + username, password);
+  regMsg.style.color = 'green';
+  regMsg.textContent = 'Usuario registrado. Ahora inicia sesión.';
+});
+
+// Login
+document.getElementById('login-btn').addEventListener('click', ()=>{
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value.trim();
+  const loginMsg = document.getElementById('login-msg');
+
+  const storedPass = localStorage.getItem('user_' + username);
+  if(storedPass && storedPass === password){
+    loginMsg.style.color = 'green';
+    loginMsg.textContent = '¡Bienvenido ' + username + '!';
+    setTimeout(()=>{
+      authScreen.style.display='none';
+      startScreen.style.display='block';
+    },500);
+  } else {
+    loginMsg.style.color = 'red';
+    loginMsg.textContent = 'Usuario o contraseña incorrectos';
+  }
+});
+
+// BOTÓN DE INICIO
+document.getElementById('start-btn').addEventListener('click', ()=>{
+  startScreen.style.display='none';
+  document.getElementById('basic').classList.add('active');
+  loadExercises('basic');
+});
+
+// EJERCICIOS
+const MAX_ATTEMPTS = 3;
+
+const exercisesData = {
+  basic: [
+    {type:'multiple', question:'¿Cómo se dice "Hola" en inglés?', options:['Hello','Hi','Good morning'], answer:0},
+    {type:'multiple', question:'¿Cómo se dice "Adiós" en inglés?', options:['Bye','Goodbye','See you'], answer:0},
+    {type:'multiple', question:'¿Cómo se dice "Gracias" en inglés?', options:['Thank you','Please','Sorry'], answer:0},
+    {type:'fill', question:'I ___ a student.', answer:'am'},
+    {type:'drag', question:'Ordena: "Me gustan las manzanas"', words:['apples','I','like'], answer:['I','like','apples']},
+    {type:'match', question:'Une palabras inglés-español:', pairs:[
+      {es:"Amigos", en:"Friends"},
+      {es:"Paz", en:"Peace"},
+      {es:"Corazón", en:"Heart"},
+      {es:"Familia", en:"Family"}
+    ]},
+    {type:'fill', question:'She ___ my friend.', answer:'is'},
+    {type:'drag', question:'Ordena: "Tú estás feliz."', words:['happy','are','You'], answer:['You','are','happy']},
+    {type:'match', question:'Une palabras:', pairs:[
+      {es:"Casa", en:"House"},
+      {es:"Agua", en:"Water"},
+      {es:"Libro", en:"Book"},
+      {es:"Perro", en:"Dog"}
+    ]}
+  ],
+  intermediate: [
+    {type:'multiple', question:'They ___ been to London before.', options:['have','has','had'], answer:0},
+    {type:'fill', question:'She ___ going to the gym every day.', answer:'is'},
+    {type:'multiple', question:'Nosotros comimos pizza', options:['We eat pizza','We ate pizza','We have eaten pizza'], answer:1},
+    {type:'drag', question:'Ordena: "Viajaré mañana."', words:['tomorrow','will','I','travel'], answer:['I','will','travel','tomorrow']},
+    {type:'match', question:'Une palabras inglés-español:', pairs:[
+      {es:"Escuela", en:"School"},
+      {es:"Trabajo", en:"Work"},
+      {es:"Libro", en:"Book"},
+      {es:"Agua", en:"Water"}
+    ]},
+    {type:'fill', question:'They ___ playing football now.', answer:'are'},
+    {type:'drag', question:'Ordena: "Fuimos al parque ayer."', words:['yesterday','We','went','to','the','park'], answer:['We','went','to','the','park','yesterday']},
+    {type:'match', question:'Une palabras:', pairs:[
+      {es:"Comida", en:"Food"},
+      {es:"Ciudad", en:"City"},
+      {es:"Familia", en:"Family"},
+      {es:"Música", en:"Music"}
+    ]}
+  ],
+  advanced: [
+    {type:'multiple', question:'If I ___ you, I would apologize.', options:['am','was','were'], answer:2},
+    {type:'fill', question:'He ___ been working here for 10 years.', answer:'has'},
+    {type:'multiple', question:'She said she ___ finish on time.', options:['will','would','can'], answer:1},
+    {type:'drag', question:'Ordena: "A pesar de la lluvia, salimos."', words:['the','went','we','rain','out','Despite'], answer:['Despite','the','rain,','we','went','out']},
+    {type:'match', question:'Une palabras inglés-español:', pairs:[
+      {es:"Perro", en:"Dog"},
+      {es:"Gato", en:"Cat"},
+      {es:"Pájaro", en:"Bird"},
+      {es:"Pez", en:"Fish"}
+    ]},
+    {type:'fill', question:'By the time we arrived, the train ___ already left.', answer:'had'},
+    {type:'drag', question:'Ordena: "Aunque estaba cansado, siguió trabajando."', words:['he','Although','was','tired,','kept','working'], answer:['Although','he','was','tired,','he','kept','working']},
+    {type:'match', question:'Une palabras:', pairs:[
+      {es:"Amor", en:"Love"},
+      {es:"Libertad", en:"Freedom"},
+      {es:"Fuerza", en:"Strength"},
+      {es:"Sabiduría", en:"Wisdom"}
+    ]}
+  ]
+};
+
+// Función para cargar ejercicios
+function loadExercises(level){
+  const container = document.getElementById(level+'-exercises');
+  container.innerHTML='';
+  const exercises = exercisesData[level];
+
+  exercises.forEach((ex,i)=>{
+    const div = document.createElement('div');
+    div.classList.add('exercise');
+    div.dataset.completed='false';
+    div.dataset.attempts='0';
+
+    if(ex.type==='multiple'){
+      div.innerHTML=`<p>${i+1}. ${ex.question}</p>`;
+      ex.options.forEach((opt,j)=>{
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.addEventListener('click', ()=>{
+          let attempts = parseInt(div.dataset.attempts);
+          if(div.dataset.completed==='true' || attempts>=MAX_ATTEMPTS) return;
+          if(j===ex.answer){
+            btn.style.background='green';
+            div.dataset.completed='true';
+          } else {
+            btn.style.background='red';
+            attempts++;
+            div.dataset.attempts=attempts;
+            decreaseProgress(level);
+            if(attempts>=MAX_ATTEMPTS){
+              div.querySelectorAll('button').forEach(b=>b.disabled=true);
+              div.style.opacity='0.6';
+            }
+          }
+          updateProgress(level);
+        });
+        div.appendChild(btn);
+      });
+    } else if(ex.type==='fill'){
+      div.innerHTML=`<p>${i+1}. ${ex.question}</p><input type="text" class="input-answer"><button>Check</button>`;
+      const input = div.querySelector('input');
+      const btn = div.querySelector('button');
+      btn.addEventListener('click', ()=>{
+        let attempts = parseInt(div.dataset.attempts);
+        if(div.dataset.completed==='true' || attempts>=MAX_ATTEMPTS) return;
+        if(input.value.trim().toLowerCase()===ex.answer.toLowerCase()){
+          input.style.border='2px solid green';
+          div.dataset.completed='true';
+        } else {
+          input.style.border='2px solid red';
+          attempts++;
+          div.dataset.attempts=attempts;
+          decreaseProgress(level);
+          if(attempts>=MAX_ATTEMPTS){
+            input.disabled=true;
+            btn.disabled=true;
+            div.style.opacity='0.6';
+          }
+        }
+        updateProgress(level);
+      });
+    } else if(ex.type==='drag'){
+      // Drag & drop básico
+      const targetContainer = document.createElement('div');
+      targetContainer.classList.add('drag-container');
+      ex.answer.forEach((word, idx)=>{
+        const target = document.createElement('span');
+        target.classList.add('drag-target');
+        target.dataset.index=idx;
+        targetContainer.appendChild(target);
+      });
+      const wordsContainer = document.createElement('div');
+      wordsContainer.classList.add('words-container');
+      ex.words.forEach(word=>{
+        const w = document.createElement('span');
+        w.classList.add('drag-word');
+        w.textContent=word;
+        w.draggable=true;
+        w.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text', word); });
+        wordsContainer.appendChild(w);
+      });
+      div.innerHTML=`<p>${i+1}. ${ex.question}</p>`;
+      div.appendChild(targetContainer);
+      div.appendChild(wordsContainer);
+
+      targetContainer.querySelectorAll('.drag-target').forEach(target=>{
+        target.addEventListener('dragover', e=>e.preventDefault());
+        target.addEventListener('drop', e=>{
+          const word = e.dataTransfer.getData('text');
+          e.target.textContent = word;
+          checkDragAnswer(div, ex.answer, targetContainer, level);
+        });
+      });
+    } else if(ex.type==='match'){
+  div.innerHTML = `<p>${i+1}. ${ex.question}</p>`;
+  const matchContainer = document.createElement('div');
+  matchContainer.classList.add('match-container');
+
+  ex.pairs.forEach(pair => {
+    const pairDiv = document.createElement('div');
+    pairDiv.classList.add('match-pair');
+
+    pairDiv.innerHTML = `
+      <span><strong>${pair.es}</strong></span>
+      <input type="text" class="match-input" placeholder="Escribe en inglés">
+    `;
+
+    matchContainer.appendChild(pairDiv);
+  });
+
+  const checkBtn = document.createElement('button');
+  checkBtn.textContent = 'Check';
+
+  checkBtn.addEventListener('click', () => {
+    let correct = true;
+
+    matchContainer.querySelectorAll('.match-pair').forEach((mp, idx) => {
+      const input = mp.querySelector('input');
+      const userAnswer = input.value.trim().toLowerCase();
+      const correctAnswer = ex.pairs[idx].en.toLowerCase();
+
+      if (userAnswer !== correctAnswer) {
+        correct = false;
+        input.style.border = '2px solid red';
+      } else {
+        input.style.border = '2px solid green';
+      }
+    });
+
+    if (correct) {
+      div.dataset.completed = 'true';
+    } else {
+      decreaseProgress(level);
+    }
+
+    updateProgress(level);
+  });
+
+  div.appendChild(matchContainer);
+  div.appendChild(checkBtn);
+}
+
+
+    container.appendChild(div);
+  });
+}
+
+// Funciones de progreso
+function updateProgress(level){
+  const container = document.getElementById(level+'-exercises');
+  const exercises = container.querySelectorAll('.exercise');
+  let done = 0;
+  exercises.forEach(ex=>{ if(ex.dataset.completed==='true') done++; });
+  const progressBar = document.getElementById(level+'-progress');
+  let percent = Math.round((done/exercises.length)*100);
+  progressBar.style.width=percent+'%';
+  const btnComplete = document.getElementById(level+'-complete');
+  if(done===exercises.length) {
+    btnComplete.disabled=false;
+    showConfetti();
+  }
+}
+
+// Funciones de reinicio 
+function resetLevel(level){
+  const container = document.getElementById(level+'-exercises');
+  const progressBar = document.getElementById(level+'-progress');
+
+  // Reiniciar barra
+  progressBar.style.width = '0%';
+
+  // Volver a cargar ejercicios desde cero
+  loadExercises(level);
+
+  // Deshabilitar botón de completar nivel
+  document.getElementById(level+'-complete').disabled = true;
+
+  // Animación visual
+  container.style.opacity = '0';
+  setTimeout(() => container.style.opacity = '1', 300);
+}
+
+function decreaseProgress(level){
+  const progressBar = document.getElementById(level+'-progress');
+  let current = parseFloat(progressBar.style.width) || 0;
+
+  // Retroceso más notable
+  const penalty = (100/exercisesData[level].length) * 0.8;
+
+  current -= penalty;
+  if(current < 0) current = 0;
+
+  progressBar.style.width = current + '%';
+
+  // Animación de retroceso
+  progressBar.style.background = "linear-gradient(90deg, #ff5252, #ff1744)";
+  setTimeout(() => {
+    progressBar.style.background = "linear-gradient(90deg, #00e676, #1de9b6)";
+  }, 500);
+}
+
+// Botones de nivel
+document.getElementById('basic-complete').addEventListener('click', ()=>{
+  document.getElementById('basic').classList.remove('active');
+  document.getElementById('intermediate').classList.add('active');
+  loadExercises('intermediate');
+});
+document.getElementById('intermediate-complete').addEventListener('click', ()=>{
+  document.getElementById('intermediate').classList.remove('active');
+  document.getElementById('advanced').classList.add('active');
+  loadExercises('advanced');
+});
+document.getElementById('advanced-complete').addEventListener('click', ()=>{
+  alert('¡Felicidades! Has completado todos los niveles.');
+});
+
+// CONFETTI
+function showConfetti(){
+  for(let i=0;i<100;i++){
+    const confetti = document.createElement('div');
+    confetti.classList.add('confetti');
+    confetti.style.left=Math.random()*100+'%';
+    confetti.style.background=`hsl(${Math.random()*360}, 100%, 50%)`;
+    confetti.style.width=Math.random()*8+2+'px';
+    confetti.style.height=Math.random()*8+2+'px';
+    document.body.appendChild(confetti);
+    setTimeout(()=>confetti.remove(),3000);
+  }
+}
+</script>
+
+</body>
+</html>
